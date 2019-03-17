@@ -329,6 +329,7 @@ class NWCConverter:
         #print(self.numberOfStaves)
 
         for i in range(self.numberOfStaves):
+            print('parse staff ', i)
             thisStaff = NWCStaff(parent=self)
             thisStaff.parse()
             self.staves.append(thisStaff)
@@ -498,33 +499,38 @@ class NWCStaff:
         #print "group: ", self.group
 
 
-        # assuming version 200 or greater for now...
-#        self.endingBar = p.byteToInt()
-#        self.muted = p.byteToInt()
-#        junk = p.byteToInt()
-#        self.channel = p.byteToInt()
-#        junk = p.byteToInt()
-#        self.playbackDevice = p.byteToInt()
-#        junk = p.byteToInt()
-#        self.patchBank = p.byteToInt()
-#        junk = p.byteToInt()
-#        self.patchName = p.byteToInt()
-#        junk = p.byteToInt()
-#        self.defaultVelocity = p.byteToInt()
-#        self.style = p.readLEShort()
-#        self.verticalSizeUpper = p.readLEShort()
-#        self.verticalSizeLower = p.readLEShort()
-        p.skipBytes(27)
-        self.lines = p.byteToInt()
-        #print "lines:", self.lines
-        #print "position:", p.parsePosition
-        self.layerWithNextStaff = p.readLEShort()
-        self.transposition = p.readLEShort()
-        self.partVolume = p.readLEShort()
-        self.stereoPan = p.readLEShort()
-        self.color = p.byteToInt()
-        self.alignSyllable = p.readLEShort()
-        self.numberOfLyrics = p.readLEShort()
+        if p.version >= 200:
+#            self.endingBar = p.byteToInt()
+#            self.muted = p.byteToInt()
+#            junk = p.byteToInt()
+#            self.channel = p.byteToInt()
+#            junk = p.byteToInt()
+#            self.playbackDevice = p.byteToInt()
+#            junk = p.byteToInt()
+#            self.patchBank = p.byteToInt()
+#            junk = p.byteToInt()
+#            self.patchName = p.byteToInt()
+#            junk = p.byteToInt()
+#            self.defaultVelocity = p.byteToInt()
+#            self.style = p.readLEShort()
+#            self.verticalSizeUpper = p.readLEShort()
+#            self.verticalSizeLower = p.readLEShort()
+            p.skipBytes(27)
+            self.lines = p.byteToInt()
+            #print "lines:", self.lines
+            #print "position:", p.parsePosition
+            self.layerWithNextStaff = p.readLEShort()
+            self.transposition = p.readLEShort()
+            self.partVolume = p.readLEShort()
+            self.stereoPan = p.readLEShort()
+            self.color = p.byteToInt()
+            self.alignSyllable = p.readLEShort()
+            self.numberOfLyrics = p.readLEShort()
+
+        elif p.version == 175:
+            p.skipBytes(29)
+            self.alignSyllable = p.readLEShort()
+            self.numberOfLyrics = p.readLEShort()
 
         if self.numberOfLyrics > 0:
             self.lyricAlignment = p.readLEShort()
@@ -584,6 +590,7 @@ class NWCStaff:
             self.numberOfObjects -= 2
 
         #print "Number of objects: ", self.numberOfObjects
+        print("nb of objects:", self.numberOfObjects)
         for i in range(self.numberOfObjects):
             thisObject = NWCObject(staffParent=self, parserParent=p)
             thisObject.parse()
@@ -648,7 +655,7 @@ class NWCObject:
         '''
         p = self.parserParent
         objectType = p.readLEShort() # a number -- an index in the objMethods list
-        if objectType >= len(self.objMethods):
+        if objectType >= len(self.objMethods) or objectType < 0:
             raise NoteworthyBinaryTranslateException(
                 "Cannot translate objectType: %d; max is %d" % (objectType, len(self.objMethods)))
         if p.version >= 170:
@@ -657,6 +664,7 @@ class NWCObject:
             self.visible = 0
 
         objectMethod = self.objMethods[objectType]
+        print('calling method ', objectMethod)
 
         objectMethod(self)
 
