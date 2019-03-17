@@ -664,7 +664,6 @@ class NWCObject:
             self.visible = 0
 
         objectMethod = self.objMethods[objectType]
-        print('calling method ', objectMethod)
 
         objectMethod(self)
 
@@ -885,7 +884,6 @@ class NWCObject:
         if (ordAtt1 & 0x10) > 0:
             self.tieInfo = "^"
 
-
         def dump(self):
             build = "|Note|Dur:" + self.durationStr + "|"
             build += "Pos:" + self.alterationStr + str(self.pos) + self.tieInfo + "|"
@@ -916,6 +914,8 @@ class NWCObject:
         self.type = 'NoteChordMember'
         if p.version <= 170:
             self.data1 = p.readBytes(12)
+        elif p.version == 175:
+            self.data1 = p.readBytes(10)
         else:
             self.data1 = p.readBytes(8)
         if (p.version >= 200):
