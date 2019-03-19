@@ -912,10 +912,12 @@ class NWCObject:
     def noteChordMember(self):
         p = self.parserParent
         self.type = 'NoteChordMember'
+        numberOfNotes = 0
         if p.version <= 170:
             self.data1 = p.readBytes(12)
         elif p.version == 175:
             self.data1 = p.readBytes(10)
+            numberOfNotes = self.data1[8]
         else:
             self.data1 = p.readBytes(8)
         if (p.version >= 200):
@@ -927,6 +929,21 @@ class NWCObject:
                 self.stemLength = 7
         else:
             self.stemLength = 7
+
+        self.data2 = []
+        for i in range(numberOfNotes):
+            chordNote = NWCObject(staffParent=self, parserParent=p)
+            chordNote.parse()
+            self.data2.append(chordNote)
+ 
+        def dump(self):
+            build = "|Chord|Dur:" + self.data2[0].durationStr + "|Pos:"
+            build += ",".join(n.alterationStr + str(n.pos) + n.tieInfo for n in self.data2)
+            return build
+
+        self.dumpMethod = dump
+
+
 
     def pedal(self):
         p = self.parserParent
