@@ -65,6 +65,7 @@ from music21 import clef
 from music21 import common
 from music21 import duration
 from music21 import dynamics
+from music21 import instrument 
 from music21 import key
 from music21 import meter
 from music21 import note
@@ -194,6 +195,8 @@ class NoteworthyTranslator:
                 self.createDynamicVariance(attributes)
             elif command == 'Dynamic':
                 self.createDynamics(attributes)
+            elif command == 'StaffInstrument':
+                self.createStaffInstrument(attributes)
 
         # Add the last Stuff
         if self.currentMeasure:
@@ -850,6 +853,11 @@ class NoteworthyTranslator:
                     lyrics.append(ll)
         return lyrics
 
+    def createStaffInstrument(self, attributes):
+        patch = int(attributes['Patch'])
+        staffInstru = instrument.instrumentFromMidiProgram(patch)
+        self.currentPart.append(staffInstru)
+        print(self.score)
 
 
 class NoteworthyTranslateException(Music21Exception):

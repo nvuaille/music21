@@ -1644,7 +1644,7 @@ def instrumentFromMidiProgram(number):
         except (AttributeError, TypeError):
             pass
 
-    raise InstrumentException('No instrument found with given midi program')
+    raise InstrumentException('No instrument found with given midi program ' + str(number))
 
 
 
