@@ -65,8 +65,10 @@ from music21 import clef
 from music21 import common
 from music21 import duration
 from music21 import dynamics
+from music21 import expressions 
 from music21 import instrument 
 from music21 import key
+from music21 import metadata 
 from music21 import meter
 from music21 import note
 from music21 import pitch
@@ -193,6 +195,10 @@ class NoteworthyTranslator:
                 self.createDynamics(attributes)
             elif command == 'StaffInstrument':
                 self.createStaffInstrument(attributes)
+            elif command == 'SongInfo':
+                self.createSongInfo(attributes)
+            elif command == 'Text':
+                self.createText(attributes)
 
         # Add the last Stuff
         if self.currentMeasure:
@@ -862,7 +868,21 @@ class NoteworthyTranslator:
         staffInstru = instrument.instrumentFromMidiProgram(patch)
         self.currentPart.append(staffInstru)
 
+    def createText(self, attributes):
+        text = attributes['Text']
+        expr = expressions.RehearsalMark(text)
+        #expr = expressions.TextExpression(text)
+        self.currentMeasure.append(expr)
 
+    def createSongInfo(self, attributes):
+        title = attributes['Title']
+        author = attributes['Author']
+        md = metadata.Metadata()
+        md.title = title
+        md.author = author
+        self.score.append(md)
+        
+    
 class NoteworthyTranslateException(Music21Exception):
     pass
 

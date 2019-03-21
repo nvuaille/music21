@@ -427,7 +427,9 @@ class NWCConverter:
         self.skipBytes(1)
 
     def dumpToNWCText(self):
-        dumpObjects = []
+        infos = '|SongInfo|Title:' + self.title.decode('utf-8')
+        infos += '|Author:' + self.author.decode('utf-8')
+        dumpObjects = [infos]
         for s in self.staves:
             staffDumpObjects = s.dump()
             for sdo in staffDumpObjects:
@@ -1044,8 +1046,15 @@ class NWCObject:
 
         if self.staffParent.label == None:
             self.staffParent.label = self.text.decode('utf-8')
+            self.text = None
         
+        def dump(self):
+            build = "|Text|Text:" + self.text.decode('utf-8') 
+            return build
 
+
+        if self.text != None:
+            self.dumpMethod = dump
 
 
     def restChordMember(self):
