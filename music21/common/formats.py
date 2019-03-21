@@ -31,13 +31,13 @@ import pathlib
 # TODO: only check top-level.  Let subconverters check sub formats.
 VALID_SHOW_FORMATS = ['musicxml', 'lilypond', 'text', 'textline', 'midi',
                       'png', 'pdf', 'svg',
-                      'lily.pdf', 'lily.png', 'lily.svg', 'braille',
+                      'ly', 'lily.pdf', 'lily.png', 'lily.svg', 'braille',
                       'vexflow', 'vexflow.html', 'vexflow.js',
                       'ipython', 'ipython.png', 'ipython.midi',
                       'musicxml.png', 'musicxml.pdf']
 VALID_WRITE_FORMATS = ['musicxml', 'lilypond', 'text', 'textline', 'midi',
                        'png', 'pdf', 'svg',
-                       'lily.pdf', 'lily.png', 'lily.svg', 'braille',
+                       'ly', 'lily.pdf', 'lily.png', 'lily.svg', 'braille',
                        'vexflow', 'vexflow.html', 'vexflow.js',
                        'ipython', 'ipython.png', 'ipython.midi',
                        'musicxml.png', 'musicxml.pdf']

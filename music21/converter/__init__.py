@@ -498,7 +498,8 @@ class Converter:
         if fp.is_dir():
             useFormat = 'musedata'
         else:
-            useFormat = common.findFormatFile(fp)
+            #useFormat = common.findFormatFile(fp)
+            useFormat = self.regularizeFormat(fp.suffix)
             if useFormat is None:
                 raise ConverterFileException('cannot find a format extensions for: %s' % fp)
         return useFormat

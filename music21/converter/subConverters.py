@@ -402,7 +402,7 @@ class ConverterLilypond(SubConverter):
     '''
     Convert to Lilypond and from there usually to png, pdf, or svg.
     '''
-    registerFormats = ('lilypond', 'lily')
+    registerFormats = ('lilypond', 'ly', 'lily')
     registerOutputExtensions = ('ly', 'png', 'pdf', 'svg')
     registerOutputSubformatExtensions = {'png': 'png',
                                          'pdf': 'pdf',
