@@ -476,7 +476,7 @@ class NWCStaff:
 
     def dump(self):
         dumpObjects = []
-        dumpObjects.append("|AddStaff|Name:\"" + self.instrumentName + "\"")
+        dumpObjects.append("|AddStaff|Name:" + self.label)
         for o in self.objects:
             dm = o.dumpMethod
             d = dm(o)
@@ -503,7 +503,6 @@ class NWCStaff:
         self.group = p.readToNUL()
         #print('unknown : ', p.fileContents[p.parsePosition:p.parsePosition+27])
         #print "group: ", self.group
-
 
         if p.version >= 200:
 #            self.endingBar = p.byteToInt()
@@ -1043,11 +1042,9 @@ class NWCObject:
         self.text = p.readToNUL()
         #print "Text: ", self.text
 
-        def dump(self):
-            build = "|Name:\"" + str(self.text) + "\""
-            return build
-
-        self.dumpMethod = dump
+        if self.staffParent.label == None:
+            self.staffParent.label = self.text.decode('utf-8')
+        
 
 
 

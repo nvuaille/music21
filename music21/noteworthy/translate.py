@@ -180,11 +180,7 @@ class NoteworthyTranslator:
                 self.translateChord(attributes)
                 self.lyricPosition += 1
             elif command == 'AddStaff':
-                self.createPart()
-                self.currentKey = key.KeySignature(0)
-                self.activeAccidentals = {}
-                self.lyrics = []
-                self.lyricPosition = 0
+                self.createStaff(attributes)
             elif command == 'Lyric1':
                 self.lyrics = self.createLyrics(attributes)
             elif command == 'Bar':
@@ -852,12 +848,19 @@ class NoteworthyTranslator:
                         ll = ' - '
                     lyrics.append(ll)
         return lyrics
+    def createStaff(self, attributes):
+        self.createPart()
+        self.currentKey = key.KeySignature(0)
+        self.activeAccidentals = {}
+        self.lyrics = []
+        self.lyricPosition = 0
+        self.currentPart.partName = attributes['Name']
+        self.currentPart.partAbbreviation = attributes['Name']
 
     def createStaffInstrument(self, attributes):
         patch = int(attributes['Patch'])
         staffInstru = instrument.instrumentFromMidiProgram(patch)
         self.currentPart.append(staffInstru)
-        print(self.score)
 
 
 class NoteworthyTranslateException(Music21Exception):
