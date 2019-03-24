@@ -67,6 +67,7 @@ from music21 import duration
 from music21 import dynamics
 from music21 import expressions 
 from music21 import instrument 
+from music21 import interval 
 from music21 import key
 from music21 import metadata 
 from music21 import meter
@@ -96,10 +97,12 @@ class NoteworthyTranslator:
     def __init__(self):
         self.currentPart = None
         self.currentMeasure = None
+        self.measureNumber = 0
         self.score = stream.Score()
 
         self.currentClef = 'TREBLE'
         self.currentKey = key.KeySignature(0)
+        self.currentTransposition = 0
 
         self.withinSlur = False
         self.beginningSlurNote = None
@@ -198,7 +201,7 @@ class NoteworthyTranslator:
             elif command == 'SongInfo':
                 self.createSongInfo(attributes)
             elif command == 'Text':
-                self.createText(attributes)
+                 self.createText(attributes)
 
         # Add the last Stuff
         if self.currentMeasure:
@@ -468,6 +471,7 @@ class NoteworthyTranslator:
         ## pitchInfo
         self.setTieFromPitchInfo(n, pitchInfo)
         n.pitch = self.getPitchFromPositionInfo(pitchInfo)
+        # n.transpose(value = self.currentTransposition, inPlace=True)
 
         # if Lyrics
         if self.lyrics and self.lyricPosition < len(self.lyrics):
@@ -683,6 +687,8 @@ class NoteworthyTranslator:
             self.score.insert(0, self.currentPart)
             self.currentPart = stream.Part()
             self.currentMeasure = stream.Measure()
+        
+        self.measureNumber = 0
 
 
     def createBarlines(self, attributes):
@@ -704,10 +710,11 @@ class NoteworthyTranslator:
         '''
         self.activeAccidentals = {}
 
+        self.measureNumber += 1
         if 'Style' not in attributes:
             # pure barline
             self.currentPart.append(self.currentMeasure)
-            self.currentMeasure = stream.Measure()
+            self.currentMeasure = stream.Measure(number = self.measureNumber)
             return
 
         style = attributes['Style']
@@ -747,6 +754,8 @@ class NoteworthyTranslator:
             self.currentMeasure = stream.Measure()
         else:
             raise NoteworthyTranslateException('cannot find a style %s in our list' % style)
+            
+        self.currentMeasure.number = self.measureNumber
 
 
     def createOtherRepetitions(self, attributes):
@@ -866,7 +875,14 @@ class NoteworthyTranslator:
     def createStaffInstrument(self, attributes):
         patch = int(attributes['Patch'])
         staffInstru = instrument.instrumentFromMidiProgram(patch)
-        self.currentPart.append(staffInstru)
+        # self.currentTransposition = int(attributes['Trans'])
+        readTranspo = int(attributes['Trans'])
+        initialTranspo = 0
+        if staffInstru.transposition != None:
+            initialTranspo =  staffInstru.transposition.semitones
+        self.currentTransposition = 12 * readTranspo // 12
+        staffInstru.transposition = interval.Interval(readTranspo)
+        self.currentPart.insert(0,staffInstru)
 
     def createText(self, attributes):
         text = attributes['Text']

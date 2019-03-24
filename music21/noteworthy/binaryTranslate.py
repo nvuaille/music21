@@ -486,7 +486,8 @@ class NWCStaff:
                 dumpObjects.append(d)
         instru = "|Name:\"" + self.instrumentName +"\""
         patch = "|Patch:" + str(self.instruments.index(self.instrumentName))
-        dumpObjects.append("|StaffInstrument" + instru + patch)
+        transpo = "|Trans:" + str(self.transposition)
+        dumpObjects.append("|StaffInstrument" + instru + patch + transpo)
         return dumpObjects
 
     def parseHeader(self):
@@ -539,7 +540,9 @@ class NWCStaff:
             instruPatch = p.byteToInt()
             if instruPatch < len(self.instruments):
                 self.instrumentName = self.instruments[instruPatch - 1]
-            p.skipBytes(17)
+            p.skipBytes(10)
+            self.transposition = p.byteToSignedInt()
+            p.skipBytes(6)
             self.alignSyllable = p.readLEShort()
             self.numberOfLyrics = p.readLEShort()
 
