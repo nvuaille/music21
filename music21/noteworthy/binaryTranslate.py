@@ -759,6 +759,11 @@ class NWCObject:
 
         def dump(self):
             build = "|Bar|"
+            styles = ['Single', 'Double', 'SectionOpen', 'SectionClose', 'LocalRepeatOpen', 'LocalRepeatClose', 'MasterRepeatOpen', 'MasterRepeatClose'] 
+            if self.style > 0 and self.style < len(styles):
+                # dont care about Single, it is the default
+                styleString = styles[self.style]
+                build += '|Style:' + styleString
             return build
 
         self.dumpMethod = dump
