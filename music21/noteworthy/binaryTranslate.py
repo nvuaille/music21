@@ -329,10 +329,12 @@ class NWCConverter:
         #print(self.numberOfStaves)
 
         for i in range(self.numberOfStaves):
-            print('parse staff ', i)
-            thisStaff = NWCStaff(parent=self)
-            thisStaff.parse()
-            self.staves.append(thisStaff)
+            # process only visible staves
+            if ord(self.groupVisibility) & 2**i:
+                print('parse staff ', i)
+                thisStaff = NWCStaff(parent=self)
+                thisStaff.parse()
+                self.staves.append(thisStaff)
 
 
     def parseHeader(self):
