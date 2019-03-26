@@ -775,7 +775,7 @@ class NWCObject:
         p.skipBytes(1)
         
         def dump(self):
-            build = "!NoteWorthyComposer-End"
+            build = "|Ending|Endings:" + str(self.style)
             return build
 
         self.dumpMethod = dump

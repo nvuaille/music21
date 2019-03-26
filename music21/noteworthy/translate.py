@@ -190,6 +190,8 @@ class NoteworthyTranslator:
                 self.lyrics = self.createLyrics(attributes)
             elif command == 'Bar':
                 self.createBarlines(attributes)
+            elif command == 'Ending':
+                self.createEnding(attributes)
             elif command == 'Flow':
                 self.createOtherRepetitions(attributes)
             elif command == 'DynamicVariance':
@@ -898,6 +900,12 @@ class NoteworthyTranslator:
         md.author = author
         self.score.append(md)
         
+    def createEnding(self, attributes):
+        end = attributes['Endings']
+        if self.currentMeasure.leftBarline == None:
+            self.currentMeasure.leftBarline = bar.Barline()
+        rbSpanner = spanner.RepeatBracket(self.currentMeasure, number = int(end))
+        self.currentPart.append(rbSpanner)
     
 class NoteworthyTranslateException(Music21Exception):
     pass
