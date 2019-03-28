@@ -481,15 +481,15 @@ class NWCStaff:
     def dump(self):
         dumpObjects = []
         dumpObjects.append("|AddStaff|Name:" + self.label)
+        instru = "|Name:\"" + self.instrumentName +"\""
+        patch = "|Patch:" + str(self.instruments.index(self.instrumentName))
+        transpo = "|Trans:" + str(self.transposition)
+        dumpObjects.append("|StaffInstrument" + instru + patch + transpo)
         for o in self.objects:
             dm = o.dumpMethod
             d = dm(o)
             if d != "":
                 dumpObjects.append(d)
-        instru = "|Name:\"" + self.instrumentName +"\""
-        patch = "|Patch:" + str(self.instruments.index(self.instrumentName))
-        transpo = "|Trans:" + str(self.transposition)
-        dumpObjects.append("|StaffInstrument" + instru + patch + transpo)
         return dumpObjects
 
     def parseHeader(self):
