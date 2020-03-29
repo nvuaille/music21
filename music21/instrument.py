@@ -1056,6 +1056,11 @@ class UnpitchedPercussion(Percussion):
     def _getModifier(self):
         return self._modifier
 
+    def bestName(self):
+        if self._modifier != None:
+            return self.instrumentName + ' ('+ self.modifier + ')'
+        return super().bestName()
+
     def _setModifier(self, modifier):
         modifier = modifier.lower().strip()
         # BEN: to-do, pull out hyphens, spaces, etc.
@@ -1750,6 +1755,53 @@ def ensembleNameBySize(number):
         return ensembleNamesBySize[int(number)]
 
 
+# _UnpitchedPercussionList = []
+def unpitchedInstrumentFromPercMapPitch(number):
+    '''
+    return the instrument with "number" as its assigned :
+
+    >>> instrument.instrumentFromMidiProgram(0)
+    <music21.instrument.Piano 'Piano'>
+    >>> instrument.instrumentFromMidiProgram(21)
+    <music21.instrument.Accordion 'Accordion'>
+    >>> instrument.instrumentFromMidiProgram(500)
+    Traceback (most recent call last):
+    music21.exceptions21.InstrumentException: No instrument found with given midi program
+
+    SLOW! creates each instrument in order
+    '''
+    for myThing in sys.modules[__name__].__dict__.values():
+        try:
+            isAnInstrument = False
+            for mroClass in myThing.mro():
+                if mroClass is UnpitchedPercussion:
+                    isAnInstrument = True
+                    break
+
+            if not isAnInstrument:
+                continue
+            i = myThing()
+
+            percPitch = getattr(i, 'percMapPitch')
+            if percPitch != None:
+                if percPitch == number:
+                    return i
+
+            mp = getattr(i, '_modifierToPercMapPitch')
+            if mp != None:
+                for modifier in mp:
+                    if mp[modifier] == number:
+                        i._setModifier(modifier)
+                        return i
+
+        except (AttributeError, TypeError):
+            pass
+
+    p = UnpitchedPercussion()
+    p.percMapPitch = number
+    return p
+    # raise InstrumentException('No instrument found with given midi program ' + str(number))
+
 def instrumentFromMidiProgram(number):
     '''
     return the instrument with "number" as its assigned midi program:
@@ -1781,7 +1833,7 @@ def instrumentFromMidiProgram(number):
         except (AttributeError, TypeError):
             pass
 
-    raise InstrumentException('No instrument found with given midi program')
+    raise InstrumentException('No instrument found with given midi program ' + str(number))
 
 
 def partitionByInstrument(streamObj):

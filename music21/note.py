@@ -1465,6 +1465,13 @@ class Unpitched(NotRest):
         p.octave = self.displayOctave
         return p
 
+    def fromDisplayPitch(self, p):
+        '''
+        set displayStep and displayOctave from the given pitches step and octave.
+        '''
+        self.displayStep = p.step
+        self.displayOctave = p.octave
+
 
 # ------------------------------------------------------------------------------
 class Rest(GeneralNote):
