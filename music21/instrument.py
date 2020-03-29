@@ -1320,6 +1320,16 @@ class SuspendedCymbal(Cymbals):
         self.instrumentSound = 'metal.cymbal.suspended'
 
 
+class ChineseCymbal(Cymbals):
+    def __init__(self):
+        super().__init__()
+
+        self.instrumentName = 'Chinese Cymbal'
+        # TODO: self.instrumentAbbreviation = ''
+        self.instrumentSound = 'metal.cymbal.chinese'
+        self.percMapPitch = 52
+
+
 class SizzleCymbal(Cymbals):
     def __init__(self):
         super().__init__()
@@ -1336,7 +1346,7 @@ class SplashCymbals(Cymbals):
         self.instrumentName = 'Splash Cymbals'
         # TODO: self.instrumentAbbreviation = ''
         self.instrumentSound = 'metal.cymbal.splash'
-
+        self.percMapPitch = 55
 
 class RideCymbals(Cymbals):
     def __init__(self):
@@ -1346,6 +1356,15 @@ class RideCymbals(Cymbals):
         # TODO: self.instrumentAbbreviation = ''
         self.instrumentSound = 'metal.cymbal.ride'
 
+        self._modifier = '1'
+
+        self._modifierToPercMapPitch = {'1': 51,
+                                        '2': 59,
+                                        }
+        self._percMapPitchToModifier = {51: '1',
+                                        59: '2',
+                                        }
+        self.percMapPitch = self._modifierToPercMapPitch[self._modifier]
 
 class HiHatCymbal(Cymbals):
     def __init__(self):
@@ -1428,6 +1447,16 @@ class SleighBells(UnpitchedPercussion):
         self.instrumentName = 'Sleigh Bells'
         # TODO: self.instrumentAbbreviation = ''
         self.instrumentSound = 'metal.bells.sleigh-bells'
+
+
+class RideBell(UnpitchedPercussion):
+    def __init__(self):
+        super().__init__()
+
+        self.instrumentName = 'Ride Bell'
+        # TODO: self.instrumentAbbreviation = ''
+        self.instrumentSound = 'metal.bells.ride-bells'
+        self.percMapPitch = 53
 
 
 class SnareDrum(UnpitchedPercussion):
