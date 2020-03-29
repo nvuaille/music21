@@ -2532,14 +2532,18 @@ class PartExporter(XMLExporterBase):
         # TODO: group
 
         # TODO: unbounded...
-        i = self.firstInstrumentObject
+        for i in self.instrumentStream:
+        # i = self.firstInstrumentObject
 
-        if i.instrumentName is not None or i.instrumentAbbreviation is not None:
-            mxScorePart.append(self.instrumentToXmlScoreInstrument(i))
+            if i.instrumentName is not None or i.instrumentAbbreviation is not None:
+                mxScorePart.append(self.instrumentToXmlScoreInstrument(i))
 
         # TODO: midi-device
-        if i.midiProgram is not None:
-            mxScorePart.append(self.instrumentToXmlMidiInstrument(i))
+        # in a separate loop because musescore 3 seems to not support alterning score-instrument
+        # and midi-instrument ...
+        for i in self.instrumentStream:
+            if i.midiProgram is not None:
+                mxScorePart.append(self.instrumentToXmlMidiInstrument(i))
 
         return mxScorePart
 
@@ -2571,8 +2575,9 @@ class PartExporter(XMLExporterBase):
         '''
         mxScoreInstrument = Element('score-instrument')
         mxScoreInstrument.set('id', str(i.instrumentId))
+
         mxInstrumentName = SubElement(mxScoreInstrument, 'instrument-name')
-        mxInstrumentName.text = str(i.instrumentName)
+        mxInstrumentName.text = str(i.bestName())
         if i.instrumentAbbreviation is not None:
             mxInstrumentAbbreviation = SubElement(mxScoreInstrument, 'instrument-abbreviation')
             mxInstrumentAbbreviation.text = str(i.instrumentAbbreviation)
@@ -2609,6 +2614,9 @@ class PartExporter(XMLExporterBase):
         mxMidiProgram = SubElement(mxMidiInstrument, 'midi-program')
         mxMidiProgram.text = str(i.midiProgram + 1)
         # TODO: midi-unpitched
+        if hasattr(i, 'percMapPitch'):
+            mxMidiUnpitched = SubElement(mxMidiInstrument, 'midi-unpitched')
+            mxMidiUnpitched.text = str(i.percMapPitch + 1)
         # TODO: volume
         # TODO: pan
         # TODO: elevation
@@ -2626,6 +2634,7 @@ class MeasureExporter(XMLExporterBase):
             ('ChordSymbol', 'chordSymbolToXml'),
             ('Chord', 'chordToXml'),
             ('Rest', 'restToXml'),
+            ('Unpitched', 'noteToXml'),
             # Skipping unpitched for now
             ('Dynamic', 'dynamicToXml'),
             ('Segno', 'segnoToXml'),
@@ -3295,7 +3304,10 @@ class MeasureExporter(XMLExporterBase):
         if addChordTag:
             SubElement(mxNote, 'chord')
 
-        if hasattr(n, 'pitch'):
+        if hasattr(n, 'displayStep'):
+            mxUnpitched = self.unpitchedToXml(n)
+            mxNote.append(mxUnpitched)
+        elif hasattr(n, 'pitch'):
             mxPitch = self.pitchToXml(n.pitch)
             mxNote.append(mxPitch)
         else:
@@ -3687,6 +3699,17 @@ class MeasureExporter(XMLExporterBase):
         mxDuration = Element('duration')
         mxDuration.text = str(int(round(self.currentDivisions * dur.quarterLength)))
         return mxDuration
+
+    def unpitchedToXml(self, p):
+        '''
+        convert an unpitch to xml.
+        '''
+        mxUnpitched = Element('unpitched')
+        mxStep = SubElement(mxUnpitched, 'display-step')
+        mxStep.text = str(p.displayStep)
+        mxOctave = SubElement(mxUnpitched, 'display-octave')
+        mxOctave.text = str(p.displayOctave)
+        return mxUnpitched
 
     def pitchToXml(self, p):
         '''
@@ -5493,6 +5516,8 @@ class MeasureExporter(XMLExporterBase):
         if 'Measure' in m.classes:
             if m.keySignature is not None:
                 mxAttributes.append(self.keySignatureToXml(m.keySignature))
+                div = mxAttributes.find('divisions')
+                div.text = str(m.timeSignature.beatCount)
             if m.timeSignature is not None:
                 mxAttributes.append(self.timeSignatureToXml(m.timeSignature))
             smts = list(m.getElementsByClass('SenzaMisuraTimeSignature'))
