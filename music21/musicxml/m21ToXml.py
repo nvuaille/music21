@@ -2401,12 +2401,12 @@ class PartExporter(XMLExporterBase):
             self.firstInstrumentObject.partIdRandomize()  # set new random id
 
         for thisInstrument in self.instrumentStream:
-            if (thisInstrument.midiChannel is None
-                    or thisInstrument.midiChannel in self.midiChannelList):
-                try:
-                    thisInstrument.autoAssignMidiChannel(usedChannels=self.midiChannelList)
-                except exceptions21.InstrumentException as e:
-                    environLocal.warn(str(e))
+            # if (thisInstrument.midiChannel is None
+            #         or thisInstrument.midiChannel in self.midiChannelList):
+            #     try:
+            #         thisInstrument.autoAssignMidiChannel(usedChannels=self.midiChannelList)
+            #     except exceptions21.InstrumentException as e:
+            #         environLocal.warn(str(e))
 
             # this is shared among all PartExporters, so long as they are created by a
             # ScoreExporter
