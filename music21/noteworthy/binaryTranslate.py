@@ -1013,7 +1013,9 @@ class NWCObject:
         self.type = 'MPC'
         self.pos = p.byteToInt()
         self.placement = p.byteToInt()
-        if p.version > 155:
+        if p.version == 175:
+            self.data1 = p.readBytes(32)
+        elif p.version > 155:
             self.data1 = p.readBytes(31)
         else:
             self.data1 = p.readBytes(32)
@@ -1078,6 +1080,7 @@ class NWCObject:
         p = self.parserParent
         self.type = 'RestChordMember'
         self.count = p.readLEShort()
+        p.skipBytes(8)
 
     objMethods = [clef            ,#0
                   keySig          ,#1
