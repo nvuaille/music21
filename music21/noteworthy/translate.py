@@ -326,15 +326,16 @@ class NoteworthyTranslator:
         '''
         # from music21 import noteworthy
         # dictionaries = noteworthy.dictionaries
-        pos = posInfo.rstrip('^')  # remove any tie
-        # What does this do???
-        pos = pos.rstrip('x')
-        pos = pos.rstrip('X')
-        pos = pos.rstrip('z')
+
+#         pos = posInfo.rstrip('^')  # remove any tie
+#         # What does this do???
+#         pos = pos.rstrip('x')
+#         pos = pos.rstrip('X')
+#         pos = pos.rstrip('z')
         pitchList = []
 
-        for thisPos in pos.split(','):
-            p = self.getOnePitchFromPosition(thisPos)
+        for thisPos in posInfo.split(','):
+            p = self.getPitchFromPositionInfo(thisPos)
             pitchList.append(p)
         return pitchList
 
