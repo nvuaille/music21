@@ -5516,8 +5516,8 @@ class MeasureExporter(XMLExporterBase):
         if 'Measure' in m.classes:
             if m.keySignature is not None:
                 mxAttributes.append(self.keySignatureToXml(m.keySignature))
-                div = mxAttributes.find('divisions')
-                div.text = str(m.timeSignature.beatCount)
+                # div = mxAttributes.find('divisions')
+                # div.text = str(m.timeSignature.beatCount)
             if m.timeSignature is not None:
                 mxAttributes.append(self.timeSignatureToXml(m.timeSignature))
             smts = list(m.getElementsByClass('SenzaMisuraTimeSignature'))
