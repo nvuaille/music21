@@ -171,44 +171,48 @@ class NoteworthyTranslator:
                         raise NoteworthyTranslateException(
                             'Cannot unpack value from %s in %s' % (attribute, pi))
 
-            if command == 'AddStaff':
-                self.createStaff(attributes)
-            elif command == 'Bar':
-                self.createBarlines(attributes)
-            elif command == 'Chord':
-                self.translateChord(attributes)
-                self.lyricPosition += 1
-            elif command == 'Clef':
-                self.createClef(attributes)
-            elif command == 'Dynamic':
-                self.createDynamics(attributes)
-            elif command == 'DynamicVariance':
-                self.createDynamicVariance(attributes)
-            elif command == 'Ending':
-                self.createEnding(attributes)
-            elif command == 'Flow':
-                self.createOtherRepetitions(attributes)
-            elif command == 'Key':
-                self.createKey(attributes)
-            elif command == 'Lyric1':
-                self.lyrics = self.createLyrics(attributes)
-            elif command == 'Note':
-                self.translateNote(attributes)
-                self.lyricPosition += 1
-            elif command == 'Rest':
-                self.translateRest(attributes)
-            elif command == 'SongInfo':
-                self.createSongInfo(attributes)
-            elif command == 'StaffInstrument':
-                self.createStaffInstrument(attributes)
-            elif command == 'Tempo':
-                self.createTempo(attributes)
-            elif command == 'Text':
-                self.createText(attributes)
-            elif command == 'TimeSig':
-                self.createTimeSignature(attributes)
+            try:
+                if command == 'AddStaff':
+                    self.createStaff(attributes)
+                elif command == 'Bar':
+                    self.createBarlines(attributes)
+                elif command == 'Chord':
+                    self.translateChord(attributes)
+                    self.lyricPosition += 1
+                elif command == 'Clef':
+                    self.createClef(attributes)
+                elif command == 'Dynamic':
+                    self.createDynamics(attributes)
+                elif command == 'DynamicVariance':
+                    self.createDynamicVariance(attributes)
+                elif command == 'Ending':
+                    self.createEnding(attributes)
+                elif command == 'Flow':
+                    self.createOtherRepetitions(attributes)
+                elif command == 'Key':
+                    self.createKey(attributes)
+                elif command == 'Lyric1':
+                    self.lyrics = self.createLyrics(attributes)
+                elif command == 'Note':
+                    self.translateNote(attributes)
+                    self.lyricPosition += 1
+                elif command == 'Rest':
+                    self.translateRest(attributes)
+                elif command == 'SongInfo':
+                    self.createSongInfo(attributes)
+                elif command == 'StaffInstrument':
+                    self.createStaffInstrument(attributes)
+                elif command == 'Tempo':
+                    self.createTempo(attributes)
+                elif command == 'Text':
+                    self.createText(attributes)
+                elif command == 'TimeSig':
+                    self.createTimeSignature(attributes)
+            except Exception as e:
+                print('Cannot create object from "%s"' % (attribute))
+                raise e
 
-        # Add the last Stuff
+                # Add the last Stuff
         if self.currentMeasure:
             self.currentPart.append(self.currentMeasure)
 
