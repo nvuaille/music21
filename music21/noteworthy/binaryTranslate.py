@@ -78,6 +78,8 @@ import struct
 from music21 import environment
 from music21 import exceptions21
 
+from music21.noteworthy import constants
+
 environLocal = environment.Environment('noteworthy.translate')
 
 
@@ -162,7 +164,7 @@ class NWCConverter:
             fp = self.fp
         with open(str(fp), 'rb') as f:  # remove in Py3.6...
             self.fileContents = f.read()
-        self.parse()
+        self.parseContent()
         return self.toStream()
 
     def parseString(self, bytesIn=None):
@@ -170,7 +172,7 @@ class NWCConverter:
         same as parseFile but takes a string (in Py3, bytes) of binary data instead.
         '''
         self.fileContents = bytesIn
-        self.parse()
+        self.parseContent()
         return self.toStream()
 
     def readLEShort(self, updateParsePosition=True):
@@ -315,7 +317,7 @@ class NWCConverter:
             pp += 1
         self.parsePosition = pp
 
-    def parse(self):
+    def parseContent(self):
         '''
         the main parse routine called by parseFile() or parseString()
         '''
@@ -333,8 +335,10 @@ class NWCConverter:
             # process only visible staves
             if not self.groupVisibility or ord(self.groupVisibility) & 2**i:
                 thisStaff = NWCStaff(parent=self)
-                thisStaff.parse()
-                self.staves.append(thisStaff)
+                thisStaff.parseStaff()
+                # FIXME exclude percussion as it can not be exported as musicxml for now
+                if thisStaff.instrumentName != 'Gunshot':
+                    self.staves.append(thisStaff)
 
     def parseHeader(self):
         '''
@@ -467,9 +471,8 @@ class NWCStaff:
         self.staffOffset = 0
         self.label = None
         self.lyricAlignment = 0
-        self.instruments = ['Acoustic Grand Piano', 'Bright Acoustic Piano', 'Electric Grand Piano', 'Honky-tonk Piano', 'Electric Piano 1', 'Electric Piano 2', 'Harpsichord', 'Clavi', 'Celesta', 'Glockenspiel', 'Music Box', 'Vibraphone', 'Marimba', 'Xylophone', 'Tubular Bells', 'Dulcimer', 'Drawbar Organ', 'Percussive Organ', 'Rock Organ', 'Church Organ', 'Reed Organ', 'Accordion', 'Harmonica', 'Tango Accordion', 'Acoustic Guitar (nylon)', 'Acoustic Guitar (steel)', 'Electric Guitar (jazz)', 'Electric Guitar (clean)', 'Electric Guitar (muted)', 'Overdriven Guitar', 'Distortion Guitar', 'Guitar harmonics', 'Acoustic Bass', 'Electric Bass (finger)', 'Electric Bass (pick)', 'Fretless Bass', 'Slap Bass 1', 'Slap Bass 2', 'Synth Bass 1', 'Synth Bass 2', 'Violin', 'Viola', 'Cello', 'Contrabass', 'Tremolo Strings', 'Pizzicato Strings', 'Orchestral Harp', 'Timpani', 'String Ensemble 1', 'String Ensemble 2', 'SynthStrings 1', 'SynthStrings 2', 'Choir Aahs', 'Voice Oohs', 'Synth Voice', 'Orchestra Hit', 'Trumpet', 'Trombone', 'Tuba', 'Muted Trumpet', 'French Horn', 'Brass Section', 'SynthBrass 1', 'SynthBrass 2', 'Soprano Sax', 'Alto Sax', 'Tenor Sax', 'Baritone Sax', 'Oboe', 'English Horn', 'Bassoon', 'Clarinet', 'Piccolo', 'Flute', 'Recorder', 'Pan Flute', 'Blown Bottle', 'Shakuhachi', 'Whistle', 'Ocarina', 'Lead 1 (square)', 'Lead 2 (sawtooth)', 'Lead 3 (calliope)', 'Lead 4 (chiff)', 'Lead 5 (charang)', 'Lead 6 (voice)', 'Lead 7 (fifths)', 'Lead 8 (bass + lead)', 'Pad 1 (new age)', 'Pad 2 (warm)', 'Pad 3 (polysynth)', 'Pad 4 (choir)', 'Pad 5 (bowed)', 'Pad 6 (metallic)', 'Pad 7 (halo)', 'Pad 8 (sweep)', 'FX 1 (rain)', 'FX 2 (soundtrack)', 'FX 3 (crystal)', 'FX 4 (atmosphere)', 'FX 5 (brightness)', 'FX 6 (goblins)', 'FX 7 (echoes)', 'FX 8 (sci-fi)', 'Sitar', 'Banjo', 'Shamisen', 'Koto', 'Kalimba', 'Bag pipe', 'Fiddle', 'Shanai', 'Tinkle Bell', 'Agogo', 'Steel Drums', 'Woodblock', 'Taiko Drum', 'Melodic Tom', 'Synth Drum', 'Reverse Cymbal', 'Guitar Fret Noise', 'Breath Noise', 'Seashore', 'Bird Tweet', 'Telephone Ring', 'Helicopter', 'Applause', 'Gunshot']
 
-    def parse(self):
+    def parseStaff(self):
         # environLocal.warn([self.parent.parsePosition, self.objects])
         self.parseHeader()
         # environLocal.warn(['header done', self.parent.parsePosition, self.objects])
@@ -482,7 +485,7 @@ class NWCStaff:
         dumpObjects = []
         dumpObjects.append('|AddStaff|Name:' + self.label)
         instru = '|Name:\"' + self.instrumentName +'\"'
-        patch = '|Patch:' + str(self.instruments.index(self.instrumentName))
+        patch = '|Patch:' + str(constants.MidiInstruments.index(self.instrumentName))
         transpo = '|Trans:' + str(self.transposition)
         dumpObjects.append('|StaffInstrument' + instru + patch + transpo)
         for o in self.objects:
@@ -541,8 +544,8 @@ class NWCStaff:
         elif p.version == 175:
             p.skipBytes(11)
             instruPatch = p.byteToInt()
-            if instruPatch < len(self.instruments):
-                self.instrumentName = self.instruments[instruPatch - 1]
+            if instruPatch < len(constants.MidiInstruments):
+                self.instrumentName = constants.MidiInstruments[instruPatch - 1]
             p.skipBytes(10)
             self.transposition = p.byteToSignedInt()
             p.skipBytes(6)
@@ -609,7 +612,7 @@ class NWCStaff:
         for i in range(self.numberOfObjects):
             print(str(i) + " / " + str(self.numberOfObjects - 1))
             thisObject = NWCObject(staffParent=self, parserParent=p)
-            thisObject.parse()
+            thisObject.parseObject()
             objects.append(thisObject)
         self.objects = objects
         # print(objects)
@@ -665,7 +668,7 @@ class NWCObject:
 
         self.dumpMethod = genericDumpMethod
 
-    def parse(self):
+    def parseObject(self):
         '''
         determine what type of object I am, and set things accordingly
         '''
@@ -684,19 +687,24 @@ class NWCObject:
 
         objectMethod(self)
 
+    # Start parsing specific objects
+    # =================================
+
     def clef(self):
+        '''
+        clef info,
+        4 bytes
+        '''
         p = self.parserParent
         # print('Clef at : ', p.parsePosition)
         self.type = 'Clef'
         self.clefType = p.readLEShort()
         self.octaveShift = p.readLEShort()
 
-        clefNames = ['Treble', 'Bass', 'Alto', 'Tenor']
-        if self.clefType < len(clefNames):
-            self.clefName = clefNames[self.clefType]
-        octaveShiftNames = [None, 'Octave Up', 'Octave Down']
-        if self.octaveShift < len(octaveShiftNames):
-            self.octaveShiftName = octaveShiftNames[self.octaveShift]
+        if self.clefType < len(constants.ClefNames):
+            self.clefName = constants.ClefNames[self.clefType]
+        if self.octaveShift < len(constants.OctaveShiftNames):
+            self.octaveShiftName = constants.OctaveShiftNames[self.octaveShift]
 
         # print('now at: ', p.parsePosition)
         def dump(inner_self):
@@ -712,6 +720,10 @@ class NWCObject:
         self.dumpMethod = dump
 
     def keySig(self):
+        '''
+        Key signature
+        10 bytes
+        '''
         p = self.parserParent
         self.type = 'KeySig'
         self.flats = p.byteToInt()
@@ -728,27 +740,10 @@ class NWCObject:
         #     bitshift = ord(letter) - ord('A')
         #     letterMask = 1 << bitshift
 
-        flatMask = {0x00: '',
-                    0x02: 'Bb',
-                    0x12: 'Bb,Eb',
-                    0x13: 'Bb,Eb,Ab',
-                    0x1B: 'Bb,Eb,Ab,Db',
-                    0x5B: 'Bb,Eb,Ab,Db,Gb',
-                    0x5F: 'Bb,Eb,Ab,Db,Gb,Cb',
-                    0x7F: 'Bb,Eb,Ab,Db,Gb,Cb,Fb'}
-        sharpMask = {0x00: '',
-                     0x20: 'F#',
-                     0x24: 'F#,C#',
-                     0x64: 'F#,C#,G#',
-                     0x6C: 'F#,C#,G#,D#',
-                     0x6D: 'F#,C#,G#,D#,A#',
-                     0x7D: 'F#,C#,G#,D#,A#,E#',
-                     0x7F: 'F#,C#,G#,D#,A#,E#,B#'}
-
-        if self.flats > 0 and self.flats in flatMask:
-            self.keyString = flatMask[self.flats]
-        elif self.sharps > 0 and self.sharps in sharpMask:
-            self.keyString = sharpMask[self.sharps]
+        if self.flats > 0 and self.flats in constants.FlatMask:
+            self.keyString = constants.FlatMask[self.flats]
+        elif self.sharps > 0 and self.sharps in constants.SharpMask:
+            self.keyString = constants.SharpMask[self.sharps]
         else:
             self.keyString = ''  # no unusual key signatures
 
@@ -759,6 +754,10 @@ class NWCObject:
         self.dumpMethod = dump
 
     def barline(self):
+        '''
+        Bar line
+        2 bytes
+        '''
         p = self.parserParent
         self.type = 'Barline'
         self.style = p.byteToInt()
@@ -766,16 +765,19 @@ class NWCObject:
 
         def dump(self):
             build = '|Bar|'
-            styles = ['Single', 'Double', 'SectionOpen', 'SectionClose', 'LocalRepeatOpen', 'LocalRepeatClose', 'MasterRepeatOpen', 'MasterRepeatClose'] 
-            if self.style > 0 and self.style < len(styles):
+            if self.style > 0 and self.style < len(constants.styles):
                 # dont care about Single, it is the default
-                styleString = styles[self.style]
+                styleString = constants.styles[self.style]
                 build += '|Style:' + styleString
             return build
 
         self.dumpMethod = dump
 
     def ending(self):
+        '''
+        Endings
+        2 bytes
+        '''
         p = self.parserParent
         self.type = 'Ending'
         self.style = p.byteToInt()
@@ -788,14 +790,23 @@ class NWCObject:
         self.dumpMethod = dump
 
     def instrument(self):
+        '''
+        Instrument
+        8 bytes
+        '''
         p = self.parserParent
         self.type = 'Instrument'
         p.skipBytes(8)
+        #TODO size ??
         self.name = p.readToNUL()
         p.skipBytes(1)
         p.skipBytes(8)  # velocity
 
     def timeSig(self):
+        '''
+        Time signature
+        6 bytes
+        '''
         p = self.parserParent
         self.type = 'TimeSignature'
         self.numerator = p.readLEShort()
@@ -810,6 +821,10 @@ class NWCObject:
         self.dumpMethod = dump
 
     def tempo(self):
+        '''
+        Tempo indications
+        5 bytes + null terminated string
+        '''
         p = self.parserParent
         self.type = 'Tempo'
         self.pos = p.byteToInt()
@@ -826,6 +841,10 @@ class NWCObject:
 
 
     def dynamic(self):
+        '''
+        dynamics
+        7 bytes
+        '''
         p = self.parserParent
         self.type = 'Dynamic'
         if p.version < 170:
@@ -865,6 +884,10 @@ class NWCObject:
         return durStr
 
     def note(self):
+        '''
+        Note
+        8 bytes
+        '''
         p = self.parserParent
         self.type = 'Note'
         # print('Note at parse position: ', p.parsePosition)
@@ -929,6 +952,10 @@ class NWCObject:
         self.dumpMethod = dump
 
     def rest(self):
+        '''
+        Rest
+        8 bytes
+        '''
         p = self.parserParent
         self.type = 'Rest'
         if p.version <= 150:
@@ -947,6 +974,11 @@ class NWCObject:
         self.dumpMethod = dump
 
     def noteChordMember(self):
+        '''
+        Chord member
+        8 bytes + n Note objects
+        '''
+
         p = self.parserParent
         self.type = 'NoteChordMember'
         numberOfNotes = 0
@@ -970,7 +1002,7 @@ class NWCObject:
         self.data2 = []
         for i in range(numberOfNotes):
             chordNote = NWCObject(staffParent=self, parserParent=p)
-            chordNote.parse()
+            chordNote.parseObject()
             self.data2.append(chordNote)
  
         def dump(self):
@@ -983,6 +1015,10 @@ class NWCObject:
 
 
     def pedal(self):
+        '''
+        Pedal
+        3 bytes
+        '''
         p = self.parserParent
         self.type = 'Pedal'
         if p.version < 170:
@@ -993,6 +1029,10 @@ class NWCObject:
             self.style = p.byteToInt()
 
     def flowDir(self):
+        '''
+        Flow
+        4 bytes
+        '''
         p = self.parserParent
         self.type = 'FlowDir'
         if p.version >= 170:
@@ -1006,8 +1046,8 @@ class NWCObject:
 
     def mpc(self):
         '''
-        what is this?
-        TODO investigate Tandu-drumonly.nwc
+        Midi Instructions
+        34 bytes
         '''
         p = self.parserParent
         self.type = 'MPC'
@@ -1021,6 +1061,10 @@ class NWCObject:
             self.data1 = p.readBytes(32)
 
     def tempoVariation(self):
+        '''
+        Tempo variation
+        4 bytes
+        '''
         p = self.parserParent
         self.type = 'TempoVariation'
         if p.version >= 170:
@@ -1036,6 +1080,10 @@ class NWCObject:
             self.delay = p.byteToInt()
 
     def dynamicVariation(self):
+        '''
+        Dynamic variation
+        3 bytes
+        '''
         p = self.parserParent
         self.type = 'DynamicVariation'
         self.pos = p.byteToInt()
@@ -1046,6 +1094,10 @@ class NWCObject:
         self.style = p.byteToInt()
 
     def performance(self):
+        '''
+        Performance
+        3 bytes
+        '''
         p = self.parserParent
         self.type = 'Performance'
         self.pos = p.byteToInt()
@@ -1056,6 +1108,10 @@ class NWCObject:
         self.style = p.byteToInt()
 
     def textObj(self):
+        '''
+        Text
+        3 bytes + null terminated string
+        '''
         p = self.parserParent
         self.type = 'Text'
         self.pos = p.byteToInt()
@@ -1077,6 +1133,10 @@ class NWCObject:
 
 
     def restChordMember(self):
+        '''
+        Rest chord
+        10 bytes
+        '''
         p = self.parserParent
         self.type = 'RestChordMember'
         self.count = p.readLEShort()
