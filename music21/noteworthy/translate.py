@@ -76,6 +76,7 @@ from music21 import pitch
 from music21 import repeat
 from music21 import spanner
 from music21 import stream
+from music21 import tempo
 from music21 import tie
 from music21.exceptions21 import Music21Exception
 from music21.exceptions21 import InstrumentException
@@ -929,9 +930,8 @@ class NoteworthyTranslator:
 
     def createTempo(self, attributes):
         tempo_value = attributes['Tempo']
-        mm = tempo.MetronomeMark(number=tempo_value)
+        mm = tempo.MetronomeMark(number=int(tempo_value))
         self.currentMeasure.insert(0, mm)
-        print("create tempo " + str(tempo_value))
 
 
 

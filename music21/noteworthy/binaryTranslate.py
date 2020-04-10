@@ -674,7 +674,7 @@ class NWCObject:
         '''
         p = self.parserParent
         objectType = p.readLEShort() # a number -- an index in the objMethods list
-        print("new object " + str(objectType))
+        # print("new object " + str(objectType))
         if objectType >= len(self.objMethods) or objectType < 0:
             raise NoteworthyBinaryTranslateException(
                 'Cannot translate objectType: %d; max is %d' % (objectType, len(self.objMethods)))
@@ -837,8 +837,10 @@ class NWCObject:
         self.text = p.readToNUL()
 
         def dump(inner_self):
-            build = 'Tempo|Tempo:%d' % inner_self.value
+            build = '|Tempo|Tempo:%d' % inner_self.value
             return build
+
+        self.dumpMethod = dump
 
 
     def dynamic(self):
