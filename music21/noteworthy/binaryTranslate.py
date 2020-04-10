@@ -484,8 +484,10 @@ class NWCStaff:
 
     def dump(self):
         dumpObjects = []
+        if self.label == None:
+            self.label = self.instrumentName if self.instrumentName != None else "NoName"
         dumpObjects.append('|AddStaff|Name:' + self.label)
-        instru = '|Name:\"' + self.instrumentName +'\"'
+        instru = '|Name:' + self.instrumentName
         patch = '|Patch:' + str(constants.MidiInstruments.index(self.instrumentName))
         transpo = '|Trans:' + str(self.transposition)
         dumpObjects.append('|StaffInstrument' + instru + patch + transpo)
@@ -730,10 +732,6 @@ class NWCObject:
         p.skipBytes(1)  # ?
         self.sharps = p.byteToInt()
         p.skipBytes(7)
-
-        # if no staff name is specified before key, set an empty one
-        if self.staffParent.label == None:
-            self.staffParent.label = self.staffParent.instrumentName if self.staffParent.instrumentName != None else "NoName"
 
         # too complex...
         # for letter in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:

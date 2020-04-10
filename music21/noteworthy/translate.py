@@ -896,13 +896,13 @@ class NoteworthyTranslator:
                 initialTranspo =  staffInstru.transposition.semitones
             self.currentTransposition = 12 * readTranspo // 12
             staffInstru.transposition = interval.Interval(readTranspo)
-            self.currentPart.insert(0,staffInstru)
+            self.currentPart.append(staffInstru)
         except InstrumentException:
             for p in range(34, 81):
                 i = instrument.unpitchedInstrumentFromPercMapPitch(p)
                 i.midiProgram = 0
                 i.midiChannel = 9
-                self.currentPart.insert(0, i)
+                self.currentPart.append( i)
             self.currentPart.partName = 'Drumset'
             self.currentPart.partAbbreviation = 'D.'
 
