@@ -437,6 +437,7 @@ class NWCConverter:
         infos += '|Author:' + self.author.decode('latin_1')
         dumpObjects = [infos]
         for s in self.staves:
+            self.previousAlteration = {}
             staffDumpObjects = s.dump()
             for sdo in staffDumpObjects:
                 dumpObjects.append(sdo)
@@ -610,7 +611,6 @@ class NWCStaff:
             self.numberOfObjects -= 2
 
         for i in range(self.numberOfObjects):
-            print(str(i) + " / " + str(self.numberOfObjects - 1))
             thisObject = NWCObject(staffParent=self, parserParent=p)
             thisObject.parseObject()
             objects.append(thisObject)
@@ -764,6 +764,7 @@ class NWCObject:
         self.localRepeatCount = p.byteToInt()
 
         def dump(self):
+            self.parserParent.previousAlteration = {}
             build = '|Bar|'
             if self.style > 0 and self.style < len(constants.styles):
                 # dont care about Single, it is the default
@@ -943,10 +944,19 @@ class NWCObject:
 
         def dump(inner_self):
             build = '|Note|Dur:' + inner_self.durationStr + '|'
+
+            # in NWC, alteration is not specified for other octave
+            alteration = inner_self.alterationStr
+            if alteration == '':
+                alteration = inner_self.parserParent.previousAlteration.get(inner_self.pos % 7)
+            if alteration == None:
+                alteration = ''
+
             build += ('Pos:'
-                      + inner_self.alterationStr
+                      + alteration
                       + str(inner_self.pos)
                       + inner_self.tieInfo + '|')
+            inner_self.parserParent.previousAlteration[inner_self.pos % 7] = inner_self.alterationStr
             return build
 
         self.dumpMethod = dump
