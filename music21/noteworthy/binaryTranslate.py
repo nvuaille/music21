@@ -861,8 +861,14 @@ class NWCObject:
         '''
         get duration string for note or rest
         '''
+
+        durationValues = ['Whole', 'Half', '4th', '8th', '16th', '32nd', '64th']
+        durStr = durationValues[self.duration]
+
+        grace = 0
         if self.type == 'Note':
             self.dotAttribute = self.attribute1[0]
+            grace = self.attribute1[1] & 0x20
         else:
             self.dotAttribute = self.data2[3]
 
@@ -875,12 +881,13 @@ class NWCObject:
         else:
             self.dots = 0
 
-        durationValues = ['Whole', 'Half', '4th', '8th', '16th', '32nd', '64th']
-        durStr = durationValues[self.duration]
         if self.dots == 1:
             durStr += ',Dotted'
         elif self.dots == 2:
             durStr += ',DblDotted'
+
+        if grace > 0:
+            durStr += ',Grace'
 
         return durStr
 

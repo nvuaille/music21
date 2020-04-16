@@ -244,8 +244,9 @@ class NoteworthyTranslator:
         for kk in parts:
             if kk == 'Grace':
                 # Now it doesn't work, the function for grace notes have to be added here
-                environLocal.warn('skipping grace note')
-                return
+                # environLocal.warn('skipping grace note')
+                # return
+                durationObject = durationObject.getGraceDuration()
             elif kk == 'Slur':
                 if self.withinSlur is False:
                     self.beginningSlurNote = generalNote
