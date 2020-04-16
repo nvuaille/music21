@@ -100,6 +100,8 @@ class NoteworthyTranslator:
         self.currentPart = None
         self.currentMeasure = None
         self.measureNumber = 0
+        self.currentEnding = 1
+        self.repeatedMeasures = []
         self.score = stream.Score()
 
         self.currentClef = 'TREBLE'
@@ -733,7 +735,15 @@ class NoteworthyTranslator:
             # pure barline
             self.currentPart.append(self.currentMeasure)
             self.currentMeasure = stream.Measure(number = self.measureNumber)
+            if len(self.repeatedMeasures) > 0:
+                self.repeatedMeasures.append(self.currentMeasure)
             return
+
+        if len(self.repeatedMeasures) > 0:
+            rbSpanner = spanner.RepeatBracket(self.repeatedMeasures, number=self.currentEnding)
+            self.currentPart.append(rbSpanner)
+
+            self.repeatedMeasures = []
 
         style = attributes['Style']
 
@@ -926,8 +936,8 @@ class NoteworthyTranslator:
         end = attributes['Endings']
         if self.currentMeasure.leftBarline == None:
             self.currentMeasure.leftBarline = bar.Barline()
-        rbSpanner = spanner.RepeatBracket(self.currentMeasure, number = int(end))
-        self.currentPart.append(rbSpanner)
+        self.repeatedMeasures = [self.currentMeasure]
+        self.currentEnding = int(end)
 
     def createTempo(self, attributes):
         tempo_value = attributes['Tempo']
