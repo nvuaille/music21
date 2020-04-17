@@ -333,7 +333,7 @@ class NWCConverter:
 
         for i in range(self.numberOfStaves):
             # process only visible staves
-            if not self.groupVisibility or ord(self.groupVisibility) & 2**i:
+            if not self.groupVisibility or int.from_bytes(self.groupVisibility, 'little') & 2**i:
                 thisStaff = NWCStaff(parent=self)
                 thisStaff.parseStaff()
                 # FIXME exclude percussion as it can not be exported as musicxml for now
