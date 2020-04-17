@@ -1163,10 +1163,8 @@ class NWCObject:
         Rest chord
         10 bytes
         '''
-        p = self.parserParent
+        self.noteChordMember()
         self.type = 'RestChordMember'
-        self.count = p.readLEShort()
-        p.skipBytes(8)
 
     objMethods = [clef            ,#0
                   keySig          ,#1
