@@ -99,6 +99,7 @@ class NoteworthyTranslator:
     def __init__(self):
         self.currentPart = None
         self.currentMeasure = None
+        self.currentVoice = None
         self.measureNumber = 0
         self.currentEnding = 1
         self.repeatedMeasures = []
@@ -502,7 +503,10 @@ class NoteworthyTranslator:
         if self.lyrics and self.lyricPosition < len(self.lyrics):
             n.addLyric(self.lyrics[self.lyricPosition])
 
-        self.currentMeasure.append(n)
+        if self.currentVoice != None:
+            self.currentVoice.append(n)
+        else:
+            self.currentMeasure.append(n)
 
     def translateChord(self, attributes):
         r'''
@@ -525,7 +529,7 @@ class NoteworthyTranslator:
         durationInfos = attributes['Dur']
         pitchInfos = attributes['Pos']
 
-        i = 1
+        i = 0
         for d in durationInfos:
 
             c = chord.Chord()   # note!
@@ -542,12 +546,16 @@ class NoteworthyTranslator:
                 c.addLyric(self.lyrics[self.lyricPosition])
 
             if len(durationInfos) == 1:
-                self.currentMeasure.append(c)
+                if self.currentVoice != None:
+                    self.currentVoice.append(c)
+                else:
+                    self.currentMeasure.append(c)
             else:
-                voice = stream.Voice()
-                voice.id = i
-                voice.append(c)
-                self.currentMeasure.append(voice)
+                self.currentVoice = stream.Voice()
+                self.currentVoice.id = i
+                self.currentVoice.append(c)
+                self.currentMeasure.append(self.currentVoice)
+
             i += 1
 
     def translateRest(self, attributes):
@@ -573,7 +581,11 @@ class NoteworthyTranslator:
 
         r = note.Rest()
         self.setDurationForObject(r, durationInfo)
-        self.currentMeasure.append(r)
+
+        if self.currentVoice != None:
+            self.currentVoice.append(r)
+        else:
+            self.currentMeasure.append(r)
 
     def createClef(self, attributes):
         r'''
@@ -725,6 +737,7 @@ class NoteworthyTranslator:
 
         self.currentPart = stream.Part()
         self.currentMeasure = stream.Measure()
+        self.currentVoice = None
         self.measureNumber = 0
 
     def createBarlines(self, attributes):
@@ -751,6 +764,7 @@ class NoteworthyTranslator:
             # pure barline
             self.currentPart.append(self.currentMeasure)
             self.currentMeasure = stream.Measure(number = self.measureNumber)
+            self.currentVoice = None
             if len(self.repeatedMeasures) > 0:
                 self.repeatedMeasures.append(self.currentMeasure)
             return
@@ -800,6 +814,7 @@ class NoteworthyTranslator:
             raise NoteworthyTranslateException('cannot find a style %s in our list' % style)
             
         self.currentMeasure.number = self.measureNumber
+        self.currentVoice = None
 
     def createOtherRepetitions(self, attributes):
         r'''
