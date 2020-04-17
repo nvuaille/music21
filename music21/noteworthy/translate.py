@@ -294,11 +294,22 @@ class NoteworthyTranslator:
             thisNoteIsTied = True
             self.withinTie = True
 
+        chord = noteOrChord if 'Chord' in noteOrChord.classes else None
+
         # if Tied
         if thisNoteBeginsATie:
-            noteOrChord.tie = tie.Tie('start')
+            if chord != None:
+                for p in chord.pitches:
+                    chord.setTie(tie.Tie('start'), p)
+            else:
+                noteOrChord.tie = tie.Tie('start')
+
         if self.withinTie is True and thisNoteIsTied is False:
-            noteOrChord.tie = tie.Tie('stop')
+            if chord != None:
+                for p in chord.pitches:
+                    chord.setTie(tie.Tie('stop'), p)
+            else:
+                noteOrChord.tie = tie.Tie('stop')
             self.withinTie = False
 
     def getPitchFromPositionInfo(self, posInfo):
@@ -538,8 +549,8 @@ class NoteworthyTranslator:
 
             # pitchInfo
             p = pitchInfos[durationInfos.index(d)]
-            self.setTieFromPitchInfo(c, p)
             c.pitches = self.getMultiplePitchesFromPositionInfo(p)
+            self.setTieFromPitchInfo(c, p)
 
             # if Lyrics
             if self.lyrics and self.lyricPosition < len(self.lyrics):
