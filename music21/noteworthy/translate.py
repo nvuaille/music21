@@ -166,7 +166,13 @@ class NoteworthyTranslator:
             for attribute in sections[2:]:
                 try:
                     (name, value) = attribute.split(':', 1)
-                    attributes[name] = value
+                    if command == 'Chord' and (name == 'Dur' or name == 'Pos'):
+                        if attributes.get(name) == None:
+                            attributes[name] = [value]
+                        else:
+                            attributes[name].append(value)
+                    else:
+                        attributes[name] = value
                 except ValueError:
                     if attribute.strip() == '':
                         pass
@@ -516,23 +522,33 @@ class NoteworthyTranslator:
         <music21.chord.Chord C5 E5 G#5>
 
         '''
-        durationInfo = attributes['Dur']
-        pitchInfo = attributes['Pos']
+        durationInfos = attributes['Dur']
+        pitchInfos = attributes['Pos']
 
-        c = chord.Chord()   # note!
+        i = 1
+        for d in durationInfos:
 
-        # durationInfo
-        self.setDurationForObject(c, durationInfo)
+            c = chord.Chord()   # note!
+            # durationInfo
+            self.setDurationForObject(c, d)
 
-        # pitchInfo
-        self.setTieFromPitchInfo(c, pitchInfo)
-        c.pitches = self.getMultiplePitchesFromPositionInfo(pitchInfo)
+            # pitchInfo
+            p = pitchInfos[durationInfos.index(d)]
+            self.setTieFromPitchInfo(c, p)
+            c.pitches = self.getMultiplePitchesFromPositionInfo(p)
 
-        # if Lyrics
-        if self.lyrics and self.lyricPosition < len(self.lyrics):
-            c.addLyric(self.lyrics[self.lyricPosition])
+            # if Lyrics
+            if self.lyrics and self.lyricPosition < len(self.lyrics):
+                c.addLyric(self.lyrics[self.lyricPosition])
 
-        self.currentMeasure.append(c)
+            if len(durationInfos) == 1:
+                self.currentMeasure.append(c)
+            else:
+                voice = stream.Voice()
+                voice.id = i
+                voice.append(c)
+                self.currentMeasure.append(voice)
+            i += 1
 
     def translateRest(self, attributes):
         r'''

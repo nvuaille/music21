@@ -1023,8 +1023,17 @@ class NWCObject:
             self.data2.append(chordNote)
  
         def dump(self):
-            build = '|Chord|Dur:' + self.data2[0].durationStr + '|Pos:'
-            build += ','.join(n.alterationStr + str(n.pos) + n.tieInfo for n in self.data2)
+            build = '|Chord'
+            notes = {}
+            for d in self.data2:
+                if notes.get(d.durationStr) == None:
+                    notes[d.durationStr] = []
+
+                notes[d.durationStr].append(d.alterationStr + str(d.pos) + d.tieInfo)
+
+            for n in notes:
+                build += '|Dur:' + n + '|Pos:' + ','.join(notes[n])
+
             return build
 
         self.dumpMethod = dump
