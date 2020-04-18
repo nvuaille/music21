@@ -36,6 +36,13 @@ from music21 import environment
 _MOD = 'instrument'
 environLocal = environment.Environment(_MOD)
 
+_ID = 0
+
+def nextId():
+    global _ID
+    _ID += 1
+    return _ID
+
 
 def unbundleInstruments(streamIn, *, inPlace=False):
     '''
@@ -207,7 +214,7 @@ class Instrument(base.Music21Object):
         '''
         Force a unique id by using an MD5
         '''
-        idNew = 'P%s' % common.getMd5()
+        idNew = 'P%s' % nextId() # common.getMd5()
         # environLocal.printDebug(['incrementing instrument from',
         #                         self.partId, 'to', idNew])
         self.partId = idNew
@@ -217,7 +224,7 @@ class Instrument(base.Music21Object):
         '''
         Force a unique id by using an MD5
         '''
-        idNew = 'I%s' % common.getMd5()
+        idNew = 'I%s' % nextId() # common.getMd5()
         # environLocal.printDebug(['incrementing instrument from',
         #                         self.partId, 'to', idNew])
         self.instrumentId = idNew
