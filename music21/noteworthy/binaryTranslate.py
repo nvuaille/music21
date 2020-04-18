@@ -141,6 +141,7 @@ class NWCConverter:
         self.sins = None
         self.user = None
         self.staffHeight = 0
+        self.currentAlterations = {}
 
     # noinspection SpellCheckingInspection
     def parseFile(self, fp=None):
@@ -437,7 +438,6 @@ class NWCConverter:
         infos += '|Author:' + self.author.decode('latin_1')
         dumpObjects = [infos]
         for s in self.staves:
-            self.previousAlteration = {}
             staffDumpObjects = s.dump()
             for sdo in staffDumpObjects:
                 dumpObjects.append(sdo)
@@ -761,8 +761,8 @@ class NWCObject:
         self.style = p.byteToInt()
         self.localRepeatCount = p.byteToInt()
 
+        self.parserParent.currentAlterations = {}
         def dump(self):
-            self.parserParent.previousAlteration = {}
             build = '|Bar|'
             if self.style > 0 and self.style < len(constants.styles):
                 # dont care about Single, it is the default
@@ -944,6 +944,14 @@ class NWCObject:
         else:
             self.alterationStr = ''
 
+
+        # in NWC, alteration is not specified for other octave
+        if self.alterationStr == '':
+            self.alterationStr = self.parserParent.currentAlterations.get(self.pos % 7)
+        if self.alterationStr == None:
+            self.alterationStr = ''
+        self.parserParent.currentAlterations[self.pos % 7] = self.alterationStr
+
         self.tieInfo = ''
         ordAtt1 = self.attribute1[0]
         if (ordAtt1 & 0x10) > 0:
@@ -952,18 +960,10 @@ class NWCObject:
         def dump(inner_self):
             build = '|Note|Dur:' + inner_self.durationStr + '|'
 
-            # in NWC, alteration is not specified for other octave
-            alteration = inner_self.alterationStr
-            if alteration == '':
-                alteration = inner_self.parserParent.previousAlteration.get(inner_self.pos % 7)
-            if alteration == None:
-                alteration = ''
-
             build += ('Pos:'
-                      + alteration
+                      + inner_self.alterationStr
                       + str(inner_self.pos)
                       + inner_self.tieInfo + '|')
-            inner_self.parserParent.previousAlteration[inner_self.pos % 7] = inner_self.alterationStr
             return build
 
         self.dumpMethod = dump
