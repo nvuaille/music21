@@ -866,9 +866,12 @@ class NWCObject:
         durStr = durationValues[self.duration]
 
         grace = 0
+        triplet = False
         if self.type == 'Note':
             self.dotAttribute = self.attribute1[0]
             grace = self.attribute1[1] & 0x20
+            # start 0101, middle 1010, end 1111
+            triplet = self.data2[1] & 0x0c
         else:
             self.dotAttribute = self.data2[3]
 
@@ -888,6 +891,9 @@ class NWCObject:
 
         if grace > 0:
             durStr += ',Grace'
+
+        if triplet:
+            durStr += ',Triplet'
 
         return durStr
 
