@@ -539,11 +539,53 @@ class NoteworthyTranslator:
         '''
         durationInfos = attributes['Dur']
         pitchInfos = attributes['Pos']
-
+        currentDuration = self.currentMeasure._getDuration()
+        isRestChord = 'Dur2' in attributes.keys()
         i = 0
-        for d in durationInfos:
 
+        # current voice has shorter duration
+        def getCurrentVoice(inner_self):
+            voice = None
+            shorter = 999
+            for item in inner_self.currentMeasure:
+                if 'Voice' in item.classes:
+                    d = item._getDuration().quarterLength
+                    if d < shorter:
+                        voice = item
+                        shorter = d
+            return voice
+
+        def getVoiceAtDuration(inner_self, voiceId, duration):
+            # first check if voice already exists in measure
+            voice = None
+            for item in inner_self.currentMeasure:
+                if 'Voice' in item.classes and item.id == voiceId:
+                    voice = item
+                    break
+            # otherwise create it
+            if voice == None:
+                voice = stream.Voice()
+                voice.id = voiceId
+                inner_self.currentMeasure.append(voice)
+
+                inner_self.currentVoice = voice
+
+                md = duration.quarterLength
+                vd = voice._getDuration().quarterLength
+                # if current voice is shorter than measure, add rest
+                if md - vd > 0:
+                    rest = note.Rest()
+                    rest.duration.quarterLength = md - vd
+                    rest.stepShift = 3
+                    inner_self.currentVoice.append(rest)
+
+            return voice
+
+
+        for d in durationInfos:
             c = chord.Chord()   # note!
+            if len(durationInfos) == 1:
+                c = note.Note()
             # durationInfo
             self.setDurationForObject(c, d)
 
@@ -556,18 +598,25 @@ class NoteworthyTranslator:
             if self.lyrics and self.lyricPosition < len(self.lyrics):
                 c.addLyric(self.lyrics[self.lyricPosition])
 
-            if len(durationInfos) == 1:
-                if self.currentVoice != None:
-                    self.currentVoice.append(c)
+            if len(durationInfos) == 1 and not isRestChord == None:
+                if getCurrentVoice(self) != None:
+                    getCurrentVoice(self).append(c)
                 else:
                     self.currentMeasure.append(c)
             else:
-                self.currentVoice = stream.Voice()
-                self.currentVoice.id = i
-                self.currentVoice.append(c)
-                self.currentMeasure.append(self.currentVoice)
+                v = getVoiceAtDuration(self, i, currentDuration)
+                v.append(c)
 
             i += 1
+
+        if isRestChord:
+            restDurInfo = attributes['Dur2']
+            restPitchInfo = attributes['Pos2']
+            r = note.Rest()
+            r.stepShift = 3
+            self.setDurationForObject(r, restDurInfo)
+            v = getVoiceAtDuration(self, i, currentDuration)
+            v.append(r)
 
     def translateRest(self, attributes):
         r'''

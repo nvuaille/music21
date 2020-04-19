@@ -1171,6 +1171,32 @@ class NWCObject:
         '''
         self.noteChordMember()
         self.type = 'RestChordMember'
+        rest = NWCObject(staffParent=self, parserParent=self.parserParent)
+        rest.duration = self.data1[0]
+        rest.data2 = self.data1
+        rest.durationStr = rest.setDurationForObject()
+        self.data2.append(rest)
+
+        def dump(self):
+            build = '|Chord'
+            notes = {}
+            for d in self.data2:
+                if notes.get(d.durationStr) == None:
+                    notes[d.durationStr] = []
+
+                notes[d.durationStr].append(d.alterationStr + str(d.pos) + d.tieInfo)
+
+            i = 0
+            for n in notes:
+                if i == len(notes) -1:
+                    build += '|Dur2:' + n + '|Pos2:' + ','.join(notes[n])
+                else:
+                    build += '|Dur:' + n + '|Pos:' + ','.join(notes[n])
+                i += 1
+
+            return build
+
+        self.dumpMethod = dump
 
     objMethods = [clef            ,#0
                   keySig          ,#1
