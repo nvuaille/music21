@@ -99,7 +99,6 @@ class NoteworthyTranslator:
     def __init__(self):
         self.currentPart = None
         self.currentMeasure = None
-        self.currentVoice = None
         self.measureNumber = 0
         self.currentEnding = 1
         self.repeatedMeasures = []
@@ -514,10 +513,20 @@ class NoteworthyTranslator:
         if self.lyrics and self.lyricPosition < len(self.lyrics):
             n.addLyric(self.lyrics[self.lyricPosition])
 
-        if self.currentVoice != None:
-            self.currentVoice.append(n)
-        else:
-            self.currentMeasure.append(n)
+        self.getCurrentVoice().append(n)
+
+    # current voice has shorter duration. If no voices, return current measure
+    def getCurrentVoice(self):
+        voice = None
+        shorter = 999
+        for item in self.currentMeasure:
+            if 'Voice' in item.classes:
+                d = item._getDuration().quarterLength
+                if d < shorter:
+                    voice = item
+                    shorter = d
+
+        return voice if voice != None else self.currentMeasure
 
     def translateChord(self, attributes):
         r'''
@@ -539,53 +548,52 @@ class NoteworthyTranslator:
         '''
         durationInfos = attributes['Dur']
         pitchInfos = attributes['Pos']
-        currentDuration = self.currentMeasure._getDuration()
+        currentDuration = self.getCurrentVoice()._getDuration()
         isRestChord = 'Dur2' in attributes.keys()
         i = 0
-
-        # current voice has shorter duration
-        def getCurrentVoice(inner_self):
-            voice = None
-            shorter = 999
-            for item in inner_self.currentMeasure:
-                if 'Voice' in item.classes:
-                    d = item._getDuration().quarterLength
-                    if d < shorter:
-                        voice = item
-                        shorter = d
-            return voice
 
         def getVoiceAtDuration(inner_self, voiceId, duration):
             # first check if voice already exists in measure
             voice = None
+            hasVoice = False
             for item in inner_self.currentMeasure:
-                if 'Voice' in item.classes and item.id == voiceId:
-                    voice = item
-                    break
+                if 'Voice' in item.classes:
+                    hasVoice = True
+                    if item.id == voiceId:
+                        voice = item
+                        break
+
             # otherwise create it
             if voice == None:
                 voice = stream.Voice()
                 voice.id = voiceId
+                # if creating the first voice, add current measure contents to it
+                if not hasVoice:
+                    notes = []
+                    for item in inner_self.currentMeasure:
+                        if 'GeneralNote' in item.classes:
+                            notes.append(item)
+                    if notes:
+                        voice.append(notes)
+                        inner_self.currentMeasure.remove(notes)
+
                 inner_self.currentMeasure.append(voice)
 
-                inner_self.currentVoice = voice
 
-                md = duration.quarterLength
-                vd = voice._getDuration().quarterLength
-                # if current voice is shorter than measure, add rest
-                if md - vd > 0:
-                    rest = note.Rest()
-                    rest.duration.quarterLength = md - vd
-                    rest.stepShift = 3
-                    inner_self.currentVoice.append(rest)
+            cd = duration.quarterLength
+            vd = voice._getDuration().quarterLength
+            # if current voice is late, add rest
+            if cd - vd > 0:
+                rest = note.Rest()
+                rest.duration.quarterLength = cd - vd
+                rest.stepShift = 3
+                voice.append(rest)
 
             return voice
 
 
         for d in durationInfos:
             c = chord.Chord()   # note!
-            if len(durationInfos) == 1:
-                c = note.Note()
             # durationInfo
             self.setDurationForObject(c, d)
 
@@ -599,10 +607,7 @@ class NoteworthyTranslator:
                 c.addLyric(self.lyrics[self.lyricPosition])
 
             if len(durationInfos) == 1 and not isRestChord == None:
-                if getCurrentVoice(self) != None:
-                    getCurrentVoice(self).append(c)
-                else:
-                    self.currentMeasure.append(c)
+                self.getCurrentVoice().append(c)
             else:
                 v = getVoiceAtDuration(self, i, currentDuration)
                 v.append(c)
@@ -642,10 +647,7 @@ class NoteworthyTranslator:
         r = note.Rest()
         self.setDurationForObject(r, durationInfo)
 
-        if self.currentVoice != None:
-            self.currentVoice.append(r)
-        else:
-            self.currentMeasure.append(r)
+        self.getCurrentVoice().append(r)
 
     def createClef(self, attributes):
         r'''
@@ -797,7 +799,6 @@ class NoteworthyTranslator:
 
         self.currentPart = stream.Part()
         self.currentMeasure = stream.Measure()
-        self.currentVoice = None
         self.measureNumber = 0
 
     def createBarlines(self, attributes):
@@ -824,7 +825,6 @@ class NoteworthyTranslator:
             # pure barline
             self.currentPart.append(self.currentMeasure)
             self.currentMeasure = stream.Measure(number = self.measureNumber)
-            self.currentVoice = None
             if len(self.repeatedMeasures) > 0:
                 self.repeatedMeasures.append(self.currentMeasure)
             return
@@ -874,7 +874,6 @@ class NoteworthyTranslator:
             raise NoteworthyTranslateException('cannot find a style %s in our list' % style)
             
         self.currentMeasure.number = self.measureNumber
-        self.currentVoice = None
 
     def createOtherRepetitions(self, attributes):
         r'''
