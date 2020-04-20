@@ -797,9 +797,9 @@ class NWCObject:
         self.type = 'Instrument'
         p.skipBytes(8)
         #TODO size ??
-        self.name = p.readToNUL()
-        p.skipBytes(1)
-        p.skipBytes(8)  # velocity
+        # self.name = p.readToNUL()
+        # p.skipBytes(1)
+        # p.skipBytes(8)  # velocity
 
     def timeSig(self):
         '''
