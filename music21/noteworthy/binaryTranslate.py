@@ -1146,8 +1146,9 @@ class NWCObject:
         '''
         p = self.parserParent
         self.type = 'Text'
-        self.pos = p.byteToInt()
+        self.pos = p.byteToSignedInt()
         self.data = p.byteToInt()
+        # role of the text (lyric, staff info ...)
         self.font = p.byteToInt()
         self.text = p.readToNUL()
 
@@ -1157,7 +1158,7 @@ class NWCObject:
             self.text = None
 
         def dump(inner_self):
-            build = "|Text|Text:" + inner_self.text.decode('latin_1') 
+            build = "|Text|Text:" + inner_self.text.decode('latin_1') + "|Pos:" + str(self.pos)
             return build
 
         if self.text != None:

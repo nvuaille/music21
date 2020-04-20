@@ -1011,7 +1011,8 @@ class NoteworthyTranslator:
         text = attributes['Text']
         # Rehearsal is associated to the score while TextExpression is staff-associated.
         expr = expressions.TextExpression(text)
-        expr.style.relativeY='20'
+        expr.positionPlacement = 'above' if int(attributes['Pos']) < 0 else 'below'
+        expr.style.relativey = attributes['Pos']
         self.currentMeasure.append(expr)
 
     def createSongInfo(self, attributes):
